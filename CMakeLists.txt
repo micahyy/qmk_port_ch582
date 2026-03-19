@@ -307,14 +307,14 @@ else()
         ${PROJECT_SOURCE_DIR}/qmk_porting/protocol/pre_handler.h
     )
 
-    if(BLE_ENABLE OR(ESB_ENABLE AND((ESB_ROLE STREQUAL "keyboard") OR(ESB_ROLE STREQUAL "dongle"))))
-        add_library(wireless_lib STATIC IMPORTED)
-        set_property(TARGET wireless_lib PROPERTY IMPORTED_LOCATION ${WIRELESS_LIB_FILE})
-        target_include_directories(wireless_lib INTERFACE ${WIRELESS_LIB_INCLUDE})
+    # if(BLE_ENABLE OR(ESB_ENABLE AND((ESB_ROLE STREQUAL "keyboard") OR(ESB_ROLE STREQUAL "dongle"))))
+    #     add_library(wireless_lib STATIC IMPORTED)
+    #     set_property(TARGET wireless_lib PROPERTY IMPORTED_LOCATION ${WIRELESS_LIB_FILE})
+    #     target_include_directories(wireless_lib INTERFACE ${WIRELESS_LIB_INCLUDE})
 
-        target_link_libraries(${keyboard}.elf PUBLIC wireless_lib)
-        target_link_libraries(${keyboard}_IAP.elf PUBLIC wireless_lib)
-    endif()
+    #     target_link_libraries(${keyboard}.elf PUBLIC wireless_lib)
+    #    target_link_libraries(${keyboard}_IAP.elf PUBLIC wireless_lib)
+    # endif()
 
     add_custom_command(TARGET ${keyboard}.elf POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${keyboard}.elf> ${HEX_FILE_APP}
