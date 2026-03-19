@@ -238,6 +238,11 @@ else()
     add_executable(${keyboard}.elf ${APP_SOURCES})
     add_executable(${keyboard}_IAP.elf ${IAP_SOURCES})
 
+    target_sources(${keyboard}.elf PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/qmk_porting/drivers/ws2812/ws2812_qmk_adapter.c
+    )
+
+
     target_compile_definitions(${keyboard}.elf PUBLIC __BUILDING_APP__=1)
     target_compile_definitions(${keyboard}_IAP.elf PUBLIC __BUILDING_IAP__=1)
 
