@@ -3,16 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
-// 定义 rgb_led_t 类型
-typedef struct {
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-#ifdef WS2812_RGBW
-    uint8_t w;
-#endif
-} rgb_led_t;
+#include "color.h"  // QMK 中定义 rgb_led_t 的头文件
 
 void ws2812_init(void);
 void ws2812_setleds(rgb_led_t *ledarray, uint16_t leds);
