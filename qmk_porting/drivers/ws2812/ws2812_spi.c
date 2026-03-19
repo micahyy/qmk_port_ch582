@@ -145,3 +145,30 @@ void ws2812_setleds(rgb_led_t *ledarray, uint16_t leds)
     // Instead spiSend can be used to send synchronously (or the thread logic can be added back).
     SPI0_StartDMA(txbuf, sizeof(txbuf) / sizeof(txbuf[0]));
 }
+
+// ============== QMK RGB Matrix适配函数 ==============
+
+// 缓存当前的LED状态
+static rgb_led_t led_cache[RGBLED_NUM] = {0};
+
+// QMK需要的接口函数
+__attribute__((weak)) void ws2812_set_color(int index, uint8_t red, uint8_t green, uint8_t blue) {
+    if (index >= 0 && index < RGBLED_NUM) {
+        led_cache[index].r = red;
+        led_cache[index].g = green;
+        led_cache[index].b = blue;
+    }
+}
+
+__attribute__((weak)) void ws2812_set_color_all(uint8_t red, uint8_t green, uint8_t blue) {
+    for (int i = 0; i < RGBLED_NUM; i++) {
+        led_cache[i].r = red;
+        led_cache[i].g = green;
+        led_cache[i].b = blue;
+    }
+}
+
+__attribute__((weak)) void ws2812_flush(void) {
+    // 调用现有的 ws2812_setleds 函数
+    ws2812_setleds(led_cache, RGBLED_NUM);
+}
