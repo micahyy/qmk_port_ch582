@@ -39,7 +39,7 @@ jobs:
         run: git fetch
 
       - name: Prepare Submodules
-        run: git submodule update --recursive --init
+        run: git config --global url."https://${{ secrets.GH_PAT }}@github.com/".insteadOf "https://github.com/" && git submodule update --recursive --init
 
       - name: Prepare Python requirements
         run: pip3 install -r ./mcuboot/scripts/requirements.txt
