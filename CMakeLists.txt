@@ -64,6 +64,7 @@ find_program(CMAKE_OBJDUMP NAMES ${TOOLCHAIN_PREFIX}-objdump PATHS ${ADDITIONAL_
 message(STATUS "Found ${TOOLCHAIN_PREFIX}-objdump: ${CMAKE_OBJDUMP}")
 
 project(qmk_port_ch582 C CXX ASM)
+set(WS2812_ADAPTER_SRC ${CMAKE_CURRENT_SOURCE_DIR}/qmk_porting/drivers/ws2812/ws2812_qmk_adapter.c)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_STANDARD 99)
 
@@ -235,7 +236,9 @@ else()
     target_link_libraries(mcuboot_porting INTERFACE mbedtls)
     target_link_libraries(mcuboot_porting INTERFACE CH582_IAP)
 
-    add_executable(${keyboard}.elf ${APP_SOURCES})
+    add_executable(${keyboard}.elf ${APP_SOURCES} 
+    ${CMAKE_CURRENT_SOURCE_DIR}/qmk_porting/drivers/ws2812/ws2812_qmk_adapter.c
+    )
     add_executable(${keyboard}_IAP.elf ${IAP_SOURCES})
 
     target_sources(${keyboard}.elf PRIVATE
