@@ -39,7 +39,7 @@ jobs:
         run: git fetch
 
       - name: Prepare Submodules
-        run: git -c submodule."qmk_porting/keyboards_private".update=none submodule update --recursive --init
+        run: git submodule update --recursive --init
 
       - name: Prepare Python requirements
         run: pip3 install -r ./mcuboot/scripts/requirements.txt
