@@ -97,3 +97,5 @@ void usb_start_periodical_bios_report()
     tmos_clear_event(usbTaskId, USB_PERIODICAL_BIOS_REPORT_EVT);
     tmos_start_task(usbTaskId, USB_PERIODICAL_BIOS_REPORT_EVT, SYS_TICK_MS(keyboard_idle));
 }
+// USB 设备状态变量定义
+uint8_t usb_device_state = USB_DEVICE_STATE_DEFAULT;
