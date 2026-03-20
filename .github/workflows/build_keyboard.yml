@@ -1,23 +1,6 @@
 name: Build keyboard firmware
 run-name: Build keyboard firmware
 
-on:
-  push:
-    branches: ["via"]
-  pull_request:
-    branches: ["via"]
-  # # Allows you to run this workflow manually from the Actions tab or through HTTP API
-  workflow_dispatch:
-    inputs:
-      keyboard:
-        description: "Keyboard name"
-        required: true
-        type: string
-      keymap:
-        description: "Specified keymap"
-        default: "default"
-        required: true
-        type: string
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
