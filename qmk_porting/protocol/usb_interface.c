@@ -24,6 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "usb_ch58x_usbfs_reg.h"
 #include "keycode_config.h"
 #include "protocol.h"
+
+#ifndef USB_BUSID
+#define USB_BUSID 0
+#endif
+
 #if ESB_ENABLE == 2
 extern void esb_dongle_usb_report_sent(uint8_t interface);
 #endif
@@ -65,7 +70,7 @@ USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t qmkraw_out_buffer[QMKRAW_OUT_EP_S
 #if defined ESB_ENABLE && ESB_ENABLE == 2
 __HIGH_CODE
 #endif
-void usbd_hid_kbd_in_callback(uint8_t ep, uint32_t nbytes)
+void usbd_hid_kbd_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     keyboard_state = HID_STATE_IDLE;
 #if defined ESB_ENABLE && ESB_ENABLE == 2
@@ -76,17 +81,17 @@ void usbd_hid_kbd_in_callback(uint8_t ep, uint32_t nbytes)
 #if defined ESB_ENABLE && ESB_ENABLE == 2
 __HIGH_CODE
 #endif
-void usbd_hid_kbd_out_callback(uint8_t ep, uint32_t nbytes)
+void usbd_hid_kbd_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     keyboard_leds_set(kbd_out_buffer[0]);
-    usbd_ep_start_read(ep, kbd_out_buffer, KBD_OUT_EP_SIZE);
+    usbd_ep_start_read(USB_BUSID, ep, kbd_out_buffer, KBD_OUT_EP_SIZE);
 }
 
 #ifdef RGB_RAW_ENABLE
 #if defined ESB_ENABLE && ESB_ENABLE == 2
 __HIGH_CODE
 #endif
-void usbd_hid_rgb_raw_in_callback(uint8_t ep, uint32_t nbytes)
+void usbd_hid_rgb_raw_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     rgbraw_state = HID_STATE_IDLE;
 #if defined ESB_ENABLE && ESB_ENABLE == 2
@@ -97,17 +102,17 @@ void usbd_hid_rgb_raw_in_callback(uint8_t ep, uint32_t nbytes)
 #if defined ESB_ENABLE && ESB_ENABLE == 2
 __HIGH_CODE
 #endif
-void usbd_hid_rgb_raw_out_callback(uint8_t ep, uint32_t nbytes)
+void usbd_hid_rgb_raw_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     receive_rgb_raw(rgbraw_out_buffer, sizeof(rgbraw_out_buffer));
-    usbd_ep_start_read(ep, rgbraw_out_buffer, sizeof(rgbraw_out_buffer));
+    usbd_ep_start_read(USB_BUSID, ep, rgbraw_out_buffer, sizeof(rgbraw_out_buffer));
 }
 #endif
 
 #if defined ESB_ENABLE && ESB_ENABLE == 2
 __HIGH_CODE
 #endif
-void usbd_hid_exkey_in_callback(uint8_t ep, uint32_t nbytes)
+void usbd_hid_exkey_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     extrakey_state = HID_STATE_IDLE;
 #if defined ESB_ENABLE && ESB_ENABLE == 2
@@ -119,7 +124,7 @@ void usbd_hid_exkey_in_callback(uint8_t ep, uint32_t nbytes)
 #if defined ESB_ENABLE && ESB_ENABLE == 2
 __HIGH_CODE
 #endif
-void usbd_hid_qmk_raw_in_callback(uint8_t ep, uint32_t nbytes)
+void usbd_hid_qmk_raw_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     qmkraw_state = HID_STATE_IDLE;
 #if defined ESB_ENABLE && ESB_ENABLE == 2
@@ -130,31 +135,31 @@ void usbd_hid_qmk_raw_in_callback(uint8_t ep, uint32_t nbytes)
 #if defined ESB_ENABLE && ESB_ENABLE == 2
 __HIGH_CODE
 #endif
-void usbd_hid_qmk_raw_out_callback(uint8_t ep, uint32_t nbytes)
+void usbd_hid_qmk_raw_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     receive_qmk_raw(qmkraw_out_buffer, sizeof(qmkraw_out_buffer));
-    usbd_ep_start_read(ep, qmkraw_out_buffer, sizeof(qmkraw_out_buffer));
+    usbd_ep_start_read(USB_BUSID, ep, qmkraw_out_buffer, sizeof(qmkraw_out_buffer));
 }
 #endif
 
-void usbd_configure_done_callback()
+void usbd_configure_done_callback(void)
 {
-    usbd_ep_start_read(KBD_OUT_EP, kbd_out_buffer, KBD_OUT_EP_SIZE);
+    usbd_ep_start_read(USB_BUSID, KBD_OUT_EP, kbd_out_buffer, KBD_OUT_EP_SIZE);
 #ifdef RGB_RAW_ENABLE
-    usbd_ep_start_read(RGBRAW_OUT_EP, rgbraw_out_buffer, sizeof(rgbraw_out_buffer));
+    usbd_ep_start_read(USB_BUSID, RGBRAW_OUT_EP, rgbraw_out_buffer, sizeof(rgbraw_out_buffer));
 #endif
 #ifdef RAW_ENABLE
-    usbd_ep_start_read(QMKRAW_OUT_EP, qmkraw_out_buffer, sizeof(qmkraw_out_buffer));
+    usbd_ep_start_read(USB_BUSID, QMKRAW_OUT_EP, qmkraw_out_buffer, sizeof(qmkraw_out_buffer));
 #endif
 }
 
-void usb_dc_low_level_init()
+void usb_dc_low_level_init(void)
 {
     DelayUs(100);
     PFIC_EnableIRQ(USB_IRQn);
 }
 
-void usb_dc_low_level_deinit()
+void usb_dc_low_level_deinit(void)
 {
     PFIC_DisableIRQ(USB_IRQn);
     R16_PIN_ANALOG_IE &= ~(RB_PIN_USB_IE | RB_PIN_USB_DP_PU);
@@ -171,7 +176,7 @@ void usb_dc_low_level_deinit()
     gpio_set_pin_input_low(B11);
 }
 
-int usb_dc_deinit()
+int usb_dc_deinit(void)
 {
     usb_dc_low_level_deinit();
     keyboard_protocol = 1;
@@ -210,7 +215,7 @@ int usb_dc_deinit()
     return 0;
 }
 
-void init_usb_driver()
+void init_usb_driver(void)
 {
     struct usbd_endpoint keyboard_in_ep = {
         .ep_cb = usbd_hid_kbd_in_callback,
@@ -301,32 +306,32 @@ void init_usb_driver()
                sizeof(hid_descriptor_scratch_3) + sizeof(hid_descriptor_scratch_4),
            hid_descriptor_scratch_5, sizeof(hid_descriptor_scratch_5));
 
-    usbd_desc_register(hid_descriptor);
+    usbd_desc_register(USB_BUSID, hid_descriptor);
 
 #ifdef NKRO_ENABLE
     if (keyboard_current_mode == KEYBOARD_MODE_NKRO) {
-        usbd_add_interface(usbd_hid_init_intf(&keyboard_interface, NkroReport, sizeof(NkroReport)));
+        usbd_add_interface(USB_BUSID, usbd_hid_init_intf(USB_BUSID, &keyboard_interface, NkroReport, sizeof(NkroReport)));
     } else
 #endif
     {
-        usbd_add_interface(usbd_hid_init_intf(&keyboard_interface, KeyboardReport, sizeof(KeyboardReport)));
+        usbd_add_interface(USB_BUSID, usbd_hid_init_intf(USB_BUSID, &keyboard_interface, KeyboardReport, sizeof(KeyboardReport)));
     }
-    usbd_add_endpoint(&keyboard_in_ep);
-    usbd_add_endpoint(&keyboard_out_ep);
+    usbd_add_endpoint(USB_BUSID, &keyboard_in_ep);
+    usbd_add_endpoint(USB_BUSID, &keyboard_out_ep);
 
 #ifdef RGB_RAW_ENABLE
-    usbd_add_interface(usbd_hid_init_intf(&rgbraw_interface, RGBRawReport, HID_RGBRAW_REPORT_DESC_SIZE));
-    usbd_add_endpoint(&rgbraw_in_ep);
-    usbd_add_endpoint(&rgbraw_out_ep);
+    usbd_add_interface(USB_BUSID, usbd_hid_init_intf(USB_BUSID, &rgbraw_interface, RGBRawReport, HID_RGBRAW_REPORT_DESC_SIZE));
+    usbd_add_endpoint(USB_BUSID, &rgbraw_in_ep);
+    usbd_add_endpoint(USB_BUSID, &rgbraw_out_ep);
 #endif
 
-    usbd_add_interface(usbd_hid_init_intf(&extrakey_interface, ExtrakeyReport, HID_EXTRAKEY_REPORT_DESC_SIZE));
-    usbd_add_endpoint(&exkey_in_ep);
+    usbd_add_interface(USB_BUSID, usbd_hid_init_intf(USB_BUSID, &extrakey_interface, ExtrakeyReport, HID_EXTRAKEY_REPORT_DESC_SIZE));
+    usbd_add_endpoint(USB_BUSID, &exkey_in_ep);
 
 #ifdef RAW_ENABLE
-    usbd_add_interface(usbd_hid_init_intf(&qmkraw_interface, QMKRawReport, HID_QMKRAW_REPORT_DESC_SIZE));
-    usbd_add_endpoint(&qmkraw_in_ep);
-    usbd_add_endpoint(&qmkraw_out_ep);
+    usbd_add_interface(USB_BUSID, usbd_hid_init_intf(USB_BUSID, &qmkraw_interface, QMKRawReport, HID_QMKRAW_REPORT_DESC_SIZE));
+    usbd_add_endpoint(USB_BUSID, &qmkraw_in_ep);
+    usbd_add_endpoint(USB_BUSID, &qmkraw_out_ep);
 #endif
 
     do {
@@ -338,13 +343,13 @@ void init_usb_driver()
     gpio_set_pin_input(B10);
     gpio_set_pin_input(B11);
 
-    usbd_initialize();
+    usbd_initialize(USB_BUSID, 0x40000000, usbd_event_handler);
 }
 
 #if defined ESB_ENABLE && ESB_ENABLE == 2
 __HIGH_CODE
 #endif
-void usbd_hid_get_report(uint8_t intf, uint8_t report_id, uint8_t report_type, uint8_t **data, uint32_t *len)
+void usbd_hid_get_report(uint8_t busid, uint8_t intf, uint8_t report_id, uint8_t report_type, uint8_t **data, uint32_t *len)
 {
 #ifdef RGB_RAW_ENABLE
     if (intf == InterfaceNumber_extra_key && report_type == USB_REQUEST_SET_FEATURE) {
@@ -357,12 +362,12 @@ void usbd_hid_get_report(uint8_t intf, uint8_t report_id, uint8_t report_type, u
     }
 }
 
-uint8_t usbd_hid_get_idle(uint8_t intf, uint8_t report_id)
+uint8_t usbd_hid_get_idle(uint8_t busid, uint8_t intf, uint8_t report_id)
 {
     return keyboard_idle;
 }
 
-uint8_t usbd_hid_get_protocol(uint8_t intf)
+uint8_t usbd_hid_get_protocol(uint8_t busid, uint8_t intf)
 {
     if (intf == InterfaceNumber_keyboard) {
         return keyboard_protocol;
@@ -374,7 +379,7 @@ uint8_t usbd_hid_get_protocol(uint8_t intf)
 #if defined ESB_ENABLE && ESB_ENABLE == 2
 __HIGH_CODE
 #endif
-void usbd_hid_set_report(uint8_t intf, uint8_t report_id, uint8_t report_type, uint8_t *report, uint32_t report_len)
+void usbd_hid_set_report(uint8_t busid, uint8_t intf, uint8_t report_id, uint8_t report_type, uint8_t *report, uint32_t report_len)
 {
 #ifdef RGB_RAW_ENABLE
     if (intf == InterfaceNumber_extra_key && report_type == USB_REQUEST_SET_FEATURE) {
@@ -383,7 +388,7 @@ void usbd_hid_set_report(uint8_t intf, uint8_t report_id, uint8_t report_type, u
 #endif
 }
 
-void usbd_hid_set_idle(uint8_t intf, uint8_t report_id, uint8_t duration)
+void usbd_hid_set_idle(uint8_t busid, uint8_t intf, uint8_t report_id, uint8_t duration)
 {
     keyboard_idle = duration;
 #ifdef NKRO_ENABLE
@@ -395,7 +400,7 @@ void usbd_hid_set_idle(uint8_t intf, uint8_t report_id, uint8_t duration)
     }
 }
 
-void usbd_hid_set_protocol(uint8_t intf, uint8_t protocol)
+void usbd_hid_set_protocol(uint8_t busid, uint8_t intf, uint8_t protocol)
 {
     if (intf == InterfaceNumber_keyboard) {
         keyboard_protocol = protocol;
@@ -415,11 +420,11 @@ void usbd_hid_set_protocol(uint8_t intf, uint8_t protocol)
     }
 }
 
-void usbd_event_handler(uint8_t event)
+void usbd_event_handler(uint8_t busid, uint8_t event)
 {
     switch (event) {
         case USBD_EVENT_RESET:
-            usb_device_state_set_reset();
+            usb_device_state_set_reset(USB_BUSID);
             break;
         case USBD_EVENT_CONNECTED:
             break;
@@ -427,22 +432,22 @@ void usbd_event_handler(uint8_t event)
             break;
         case USBD_EVENT_RESUME:
 #if !defined ESB_ENABLE || ESB_ENABLE == 1
-            usb_device_state_set_resume(usb_device_is_configured(), 1);
+            usb_device_state_set_resume(USB_BUSID, usb_device_is_configured(USB_BUSID), 1);
 #else
-            inform_keyboard_usb_resume(usb_device_is_configured());
+            inform_keyboard_usb_resume(usb_device_is_configured(USB_BUSID));
 #endif
             break;
         case USBD_EVENT_SUSPEND:
 #if !defined ESB_ENABLE || ESB_ENABLE == 1
-            usb_device_state_set_suspend(usb_device_is_configured(), 1);
+            usb_device_state_set_suspend(USB_BUSID, usb_device_is_configured(USB_BUSID), 1);
 #else
-            inform_keyboard_usb_suspend(usb_device_is_configured());
+            inform_keyboard_usb_suspend(usb_device_is_configured(USB_BUSID));
 #endif
             break;
         case USBD_EVENT_CONFIGURED:
             usbd_configure_done_callback();
 #if !defined ESB_ENABLE || ESB_ENABLE == 1
-            usb_device_state_set_configuration(true, 1);
+            usb_device_state_set_configuration(USB_BUSID, true, 1);
 #else
             inform_keyboard_usb_configured();
 #endif
@@ -459,7 +464,7 @@ void usbd_event_handler(uint8_t event)
 #if defined ESB_ENABLE && ESB_ENABLE == 2
 __HIGH_CODE
 #endif
-bool usb_remote_wakeup()
+bool usb_remote_wakeup(void)
 {
     if (!(R8_USB_MIS_ST & RB_UMS_SUSPEND)) {
         return true;
@@ -488,7 +493,7 @@ bool hid_keyboard_send_report(uint8_t mode, uint8_t *data, uint8_t len)
 {
     if (mode != keyboard_current_mode) {
         keyboard_current_mode = mode;
-        usbd_deinitialize();
+        usbd_deinitialize(USB_BUSID);
         init_usb_driver();
     }
 
@@ -510,7 +515,7 @@ bool hid_keyboard_send_report(uint8_t mode, uint8_t *data, uint8_t len)
     }
 #endif
 
-    int ret = usbd_ep_start_write(KBD_IN_EP, data, len);
+    int ret = usbd_ep_start_write(USB_BUSID, KBD_IN_EP, data, len);
 
     if (ret < 0) {
         return false;
@@ -526,7 +531,7 @@ bool hid_keyboard_send_report(uint8_t mode, uint8_t *data, uint8_t len)
 #if defined ESB_ENABLE && ESB_ENABLE == 2
 __HIGH_CODE
 #endif
-void hid_keyboard_send_last_bios_report()
+void hid_keyboard_send_last_bios_report(void)
 {
     hid_keyboard_send_report(KEYBOARD_MODE_BIOS, keyboard_last_bios_report, KEYBOARD_REPORT_SIZE);
 }
@@ -555,7 +560,7 @@ bool hid_rgb_raw_send_report(uint8_t *data, uint8_t len)
     }
 #endif
 
-    int ret = usbd_ep_start_write(RGBRAW_IN_EP, data, len);
+    int ret = usbd_ep_start_write(USB_BUSID, RGBRAW_IN_EP, data, len);
 
     if (ret < 0) {
         return false;
@@ -588,7 +593,7 @@ inline bool hid_exkey_send_report(uint8_t *data, uint8_t len)
     }
 #endif
 
-    int ret = usbd_ep_start_write(EXKEY_IN_EP, data, len);
+    int ret = usbd_ep_start_write(USB_BUSID, EXKEY_IN_EP, data, len);
 
     if (ret < 0) {
         return false;
@@ -621,7 +626,7 @@ bool hid_qmk_raw_send_report(uint8_t *data, uint8_t len)
     }
 #endif
 
-    int ret = usbd_ep_start_write(QMKRAW_IN_EP, data, len);
+    int ret = usbd_ep_start_write(USB_BUSID, QMKRAW_IN_EP, data, len);
 
     if (ret < 0) {
         return false;
