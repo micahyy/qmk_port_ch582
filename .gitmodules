@@ -6,3 +6,6 @@
 	path = qmk_porting/keyboards_private
 	url = https://github.com/O-H-M2/keyboards_private.git
 
+[submodule "qmk_firmware"]
+	path = qmk_firmware
+	url = https://github.com/micahyy/qmk_582.git
