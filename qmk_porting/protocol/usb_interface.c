@@ -176,7 +176,7 @@ void usb_dc_low_level_deinit(void)
     gpio_set_pin_input_low(B11);
 }
 
-int usb_dc_deinit(void)
+int usb_dc_deinit(uint8_t busid)
 {
     usb_dc_low_level_deinit();
     keyboard_protocol = 1;
