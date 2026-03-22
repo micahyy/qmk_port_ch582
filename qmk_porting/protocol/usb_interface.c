@@ -25,6 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "keycode_config.h"
 #include "protocol.h"
 
+// 前向声明
+void usbd_event_handler(uint8_t busid, uint8_t event);
+
 #ifndef USB_BUSID
 #define USB_BUSID 0
 #endif
