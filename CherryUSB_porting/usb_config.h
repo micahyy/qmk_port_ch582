@@ -260,4 +260,14 @@
 #undef USB_PID_PRE
 #endif
 
+/* ================ MSC Configuration ================ */
+
+#ifndef CONFIG_USBDEV_MSC_MAX_LUN
+#define CONFIG_USBDEV_MSC_MAX_LUN      1
+#endif
+
+#ifndef CONFIG_USBDEV_MSC_MAX_BUFSIZE
+#define CONFIG_USBDEV_MSC_MAX_BUFSIZE  CONFIG_USBDEV_MSC_BLOCK_SIZE
+#endif
+
 #endif
