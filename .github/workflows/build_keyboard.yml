@@ -57,7 +57,7 @@ jobs:
             ls -la qmk_firmware/ || echo "qmk_firmware directory empty"
             ls -la qmk_firmware/quantum/ 2>/dev/null || echo "quantum directory not found"
           fi
-            - name: Clone mbedtls for IAP
+      - name: Clone mbedtls for IAP
         run: |
           cd mcuboot/ext
           if [ ! -d "mbedtls" ]; then
@@ -65,7 +65,7 @@ jobs:
           fi
           cd ../..
           ls -la mcuboot/ext/mbedtls/include/mbedtls/sha256.h
-          
+
       - name: Create missing rgb_matrix/post_config.h
         run: |
           mkdir -p qmk_firmware/quantum/rgb_matrix
