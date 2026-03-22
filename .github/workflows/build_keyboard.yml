@@ -92,10 +92,16 @@ jobs:
 
       - name: Debug - Find quantum.h
         run: |
-          echo "Searching for quantum.h..."
-          find . -name "quantum.h" 2>/dev/null | head -20
-          echo "---"
-          ls -la qmk_firmware/quantum/quantum.h || echo "quantum.h not found in qmk_firmware/quantum/"
+          echo "=== Current directory ==="
+          pwd
+          echo "=== Directory structure ==="
+          ls -la
+          echo "=== Looking for quantum.h ==="
+          find . -name "quantum.h" -type f 2>/dev/null
+          echo "=== Checking qmk_firmware/quantum/ ==="
+          ls -la qmk_firmware/quantum/ 2>/dev/null | head -20 || echo "qmk_firmware/quantum/ not found"
+          echo "=== Checking qmk_firmware root ==="
+          ls -la qmk_firmware/ | head -20
 
 
       - name: Configure CMake

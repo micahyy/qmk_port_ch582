@@ -1,4 +1,4 @@
-#include "../../../qmk_firmware/quantum/quantum.h"
+#include "qmk_firmware/quantum/quantum.h"
 #include "ws2812.h"
 #include "ws2812_supplement.h"
 
