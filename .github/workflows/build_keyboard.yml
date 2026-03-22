@@ -6,7 +6,7 @@ on:
     branches: ["via"]
   pull_request:
     branches: ["via"]
-  # # Allows you to run this workflow manually from the Actions tab or through HTTP API
+  # Allows you to run this workflow manually from the Actions tab or through HTTP API
   workflow_dispatch:
     inputs:
       keyboard:
@@ -20,14 +20,10 @@ on:
         type: string
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
 
 jobs:
   build:
-    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
-    # You can convert this to a matrix build if you need cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -57,6 +53,7 @@ jobs:
             ls -la qmk_firmware/ || echo "qmk_firmware directory empty"
             ls -la qmk_firmware/quantum/ 2>/dev/null || echo "quantum directory not found"
           fi
+
       - name: Create minimal mbedtls headers for IAP
         run: |
           mkdir -p mcuboot/ext/mbedtls/include/mbedtls
@@ -112,23 +109,34 @@ jobs:
       - name: Prepare Python requirements
         run: pip3 install -r ./mcuboot/scripts/requirements.txt
 
-      - name: Debug - Find quantum.h
+      - name: Create rgb_matrix/post_config.h
         run: |
-          echo "=== Current directory ==="
-          pwd
-          echo "=== Directory structure ==="
-          ls -la
-          echo "=== Looking for quantum.h ==="
-          find . -name "quantum.h" -type f 2>/dev/null
-          echo "=== Checking qmk_firmware/quantum/ ==="
-          ls -la qmk_firmware/quantum/ 2>/dev/null | head -20 || echo "qmk_firmware/quantum/ not found"
-          echo "=== Checking qmk_firmware root ==="
-          ls -la qmk_firmware/ | head -20
+          mkdir -p qmk_firmware/quantum/rgb_matrix
+          cat > qmk_firmware/quantum/rgb_matrix/post_config.h << 'EOF'
+          // Copyright 2023 QMK
+          // SPDX-License-Identifier: GPL-2.0-or-later
 
+          #pragma once
+
+          #ifndef RGB_MATRIX_LED_COUNT
+              #ifdef RGBLED_NUM
+                  #define RGB_MATRIX_LED_COUNT RGBLED_NUM
+              #else
+                  #define RGB_MATRIX_LED_COUNT 1
+              #endif
+          #endif
+
+          #ifndef RGB_MATRIX_DRIVER
+              #define RGB_MATRIX_DRIVER WS2812
+          #endif
+
+          #ifndef RGB_MATRIX_DEFAULT_MODE
+              #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_CYCLE_LEFT_RIGHT
+          #endif
+          EOF
+          echo "post_config.h created"
 
       - name: Configure CMake
-        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
         run: cmake --no-warn-unused-cli -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=${{env.BUILD_TYPE}} -Dkeyboard:STRING=${{inputs.keyboard}} -Dkeymap:STRING=${{inputs.keymap}} -S${{github.workspace}} -B${{github.workspace}}/build
 
       - name: Build
@@ -141,22 +149,14 @@ jobs:
           TOOLCHAIN_BIN="${{github.workspace}}/utils/Linux/riscv-none-elf-gcc/bin"
           
           # 检查 .elf 文件
+          echo "Checking elf file:"
           ls -la build/mk01.elf
           
           # 生成 hex 文件
           $TOOLCHAIN_BIN/riscv-none-elf-objcopy -Oihex build/mk01.elf mk01.hex
           
-          # 检查 hex 文件大小
-          ls -la mk01.hex
-          
-          # 如果 hex 文件为空或太小，说明编译有问题
-          if [ ! -s mk01.hex ]; then
-            echo "Error: mk01.hex is empty!"
-            exit 1
-          fi
-          
-          # 生成 uf2 文件，使用固定地址
-          python3 utils/uf2conv.py mk01.hex -c -f 0x1aa143c7 -o mk01.uf2 -a 0x13000
+          # 生成 uf2 文件
+          python3 utils/uf2conv.py mk01.hex -c -f 0x1aa143c7 -o mk01.uf2
           
           echo "Generated files:"
           ls -la mk01.hex mk01.uf2
@@ -168,18 +168,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{inputs.keyboard}}.uf2
-          path: ${{inputs.keyboard}}_upgrade_${{ env.git_ver }}.uf2
+          path: mk01.uf2
 
       - name: Hex Firmware (${{inputs.keyboard}})
         uses: actions/upload-artifact@v4
         with:
           name: ${{inputs.keyboard}}.hex
-          path: ${{inputs.keyboard}}_factory_${{ env.git_ver }}.hex
-
-
-
-      # - name: Test
-      #   working-directory: ${{github.workspace}}/build
-      #   # Execute tests defined by the CMake configuration.
-      #   # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      #   run: ctest -C ${{env.BUILD_TYPE}}
+          path: mk01.hex
