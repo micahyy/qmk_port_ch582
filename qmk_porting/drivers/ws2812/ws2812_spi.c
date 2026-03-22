@@ -1,4 +1,4 @@
-#include "quantum.h"
+#include "quantum/quantum.h"
 #include "ws2812.h"
 #include "ws2812_supplement.h"
 
