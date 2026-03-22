@@ -154,11 +154,21 @@ jobs:
           echo "Checking elf file:"
           ls -la build/mk01.elf
           
+          # 获取入口地址
+          ENTRY_ADDR=$($TOOLCHAIN_BIN/riscv-none-elf-readelf -h build/mk01.elf | grep "Entry point address" | awk '{print $4}')
+          echo "Entry point address: $ENTRY_ADDR"
+          
+          # 如果没有入口地址，使用默认值（CH582 的 flash 起始地址）
+          if [ -z "$ENTRY_ADDR" ] || [ "$ENTRY_ADDR" = "0x0" ]; then
+            ENTRY_ADDR="0x13000"
+            echo "Using default address: $ENTRY_ADDR"
+          fi
+          
           # 生成 hex 文件
           $TOOLCHAIN_BIN/riscv-none-elf-objcopy -Oihex build/mk01.elf mk01.hex
           
           # 生成 uf2 文件
-          python3 utils/uf2conv.py mk01.hex -c -f 0x1aa143c7 -o mk01.uf2
+          python3 utils/uf2conv.py mk01.hex -c -f 0x1aa143c7 -o mk01.uf2 -a $ENTRY_ADDR
           
           echo "Generated files:"
           ls -la mk01.hex mk01.uf2
