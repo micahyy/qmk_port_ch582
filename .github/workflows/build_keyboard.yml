@@ -90,6 +90,16 @@ jobs:
       - name: Prepare Python requirements
         run: pip3 install -r ./mcuboot/scripts/requirements.txt
 
+      - name: Ensure quantum.h is accessible
+        run: |
+        # 检查 quantum.h 是否存在
+          find qmk_firmware -name "quantum.h" 2>/dev/null || echo "quantum.h not found"
+        # 如果存在，创建符号链接到根目录
+          if [ -f "qmk_firmware/quantum/quantum.h" ]; then
+          ln -sf qmk_firmware/quantum/quantum.h quantum.h
+          fi
+
+
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
