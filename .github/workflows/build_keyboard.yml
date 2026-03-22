@@ -134,7 +134,14 @@ jobs:
       - name: Build
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target all --
-
+      - name: Check generated files
+        run: |
+          echo "=== Checking for generated files ==="
+          ls -la build/*.elf 2>/dev/null || echo "No .elf files"
+          ls -la *.hex 2>/dev/null || echo "No .hex files"
+          ls -la *.uf2 2>/dev/null || echo "No .uf2 files"
+          echo "=== Build directory contents ==="
+          ls -la build/
       - name: Get git version
         run: echo "git_ver=$(git describe --always --dirty)" >> $GITHUB_ENV
 
