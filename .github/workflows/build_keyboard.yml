@@ -90,14 +90,12 @@ jobs:
       - name: Prepare Python requirements
         run: pip3 install -r ./mcuboot/scripts/requirements.txt
 
-      - name: Ensure quantum.h is accessible
+      - name: Debug - Find quantum.h
         run: |
-        # 检查 quantum.h 是否存在
-          find qmk_firmware -name "quantum.h" 2>/dev/null || echo "quantum.h not found"
-        # 如果存在，创建符号链接到根目录
-          if [ -f "qmk_firmware/quantum/quantum.h" ]; then
-          ln -sf qmk_firmware/quantum/quantum.h quantum.h
-          fi
+          echo "Searching for quantum.h..."
+          find . -name "quantum.h" 2>/dev/null | head -20
+          echo "---"
+          ls -la qmk_firmware/quantum/quantum.h || echo "quantum.h not found in qmk_firmware/quantum/"
 
 
       - name: Configure CMake
