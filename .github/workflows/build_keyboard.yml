@@ -134,14 +134,14 @@ jobs:
       - name: Build
         run: |
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target mk01.elf || true
-
+          
       - name: Post build - generate UF2 and HEX
         run: |
-          # 手动执行打包命令
-          cd build
-          riscv-none-elf-objcopy -Oihex mk01.elf mk01.hex
-          python3 ../utils/uf2conv.py mk01.hex -c -f 0x1aa143c7 -o mk01.uf2
-          cd ..
+          # 使用项目自带的工具链
+          TOOLCHAIN_BIN="${{github.workspace}}/utils/Linux/riscv-none-elf-gcc/bin"
+          $TOOLCHAIN_BIN/riscv-none-elf-objcopy -Oihex build/mk01.elf mk01.hex
+          python3 utils/uf2conv.py mk01.hex -c -f 0x1aa143c7 -o mk01.uf2
+          echo "Generated files:"
           ls -la mk01.hex mk01.uf2
 
       - name: Get git version
@@ -159,14 +159,7 @@ jobs:
           name: ${{inputs.keyboard}}.hex
           path: ${{inputs.keyboard}}_factory_${{ env.git_ver }}.hex
 
-      - name: Post build - generate UF2 and HEX
-        run: |
-          # 使用项目自带的工具链
-          TOOLCHAIN_BIN="${{github.workspace}}/utils/Linux/riscv-none-elf-gcc/bin"
-          $TOOLCHAIN_BIN/riscv-none-elf-objcopy -Oihex build/mk01.elf mk01.hex
-          python3 utils/uf2conv.py mk01.hex -c -f 0x1aa143c7 -o mk01.uf2
-          echo "Generated files:"
-          ls -la mk01.hex mk01.uf2
+
 
       # - name: Test
       #   working-directory: ${{github.workspace}}/build
