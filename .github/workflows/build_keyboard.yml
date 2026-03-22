@@ -40,8 +40,23 @@ jobs:
 
       - name: Prepare Submodules
         run: |
+          # 初始化所有子模块，忽略 keyboards_private 的错误
           git submodule update --init --recursive || true
-          echo "Submodules prepared (ignoring errors)"
+          
+          # 确保 qmk_firmware 子模块被正确拉取
+          if [ ! -d "qmk_firmware/quantum" ]; then
+            echo "qmk_firmware submodule not initialized, forcing..."
+            git submodule update --init --recursive qmk_firmware
+          fi
+          
+          # 验证 quantum.h 是否存在
+          if [ -f "qmk_firmware/quantum/quantum.h" ]; then
+            echo "✓ quantum.h found"
+          else
+            echo "✗ quantum.h not found, checking directory..."
+            ls -la qmk_firmware/ || echo "qmk_firmware directory empty"
+            ls -la qmk_firmware/quantum/ 2>/dev/null || echo "quantum directory not found"
+          fi
       
       - name: Create missing rgb_matrix/post_config.h
         run: |
