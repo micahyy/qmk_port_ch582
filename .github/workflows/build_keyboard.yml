@@ -134,13 +134,30 @@ jobs:
       - name: Build
         run: |
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target mk01.elf || true
-          
+
       - name: Post build - generate UF2 and HEX
         run: |
           # 使用项目自带的工具链
           TOOLCHAIN_BIN="${{github.workspace}}/utils/Linux/riscv-none-elf-gcc/bin"
+          
+          # 检查 .elf 文件
+          ls -la build/mk01.elf
+          
+          # 生成 hex 文件
           $TOOLCHAIN_BIN/riscv-none-elf-objcopy -Oihex build/mk01.elf mk01.hex
-          python3 utils/uf2conv.py mk01.hex -c -f 0x1aa143c7 -o mk01.uf2
+          
+          # 检查 hex 文件大小
+          ls -la mk01.hex
+          
+          # 如果 hex 文件为空或太小，说明编译有问题
+          if [ ! -s mk01.hex ]; then
+            echo "Error: mk01.hex is empty!"
+            exit 1
+          fi
+          
+          # 生成 uf2 文件，使用固定地址
+          python3 utils/uf2conv.py mk01.hex -c -f 0x1aa143c7 -o mk01.uf2 -a 0x13000
+          
           echo "Generated files:"
           ls -la mk01.hex mk01.uf2
 
