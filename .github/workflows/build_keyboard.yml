@@ -145,33 +145,17 @@ jobs:
         run: |
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target mk01.elf || true
 
-      - name: Post build - generate UF2 and HEX
+      - name: Build with post_build
         run: |
-          # 使用项目自带的工具链
-          TOOLCHAIN_BIN="${{github.workspace}}/utils/Linux/riscv-none-elf-gcc/bin"
+          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target all -- || true
           
-          # 检查 .elf 文件
-          echo "Checking elf file:"
-          ls -la build/mk01.elf
-          
-          # 获取入口地址
-          ENTRY_ADDR=$($TOOLCHAIN_BIN/riscv-none-elf-readelf -h build/mk01.elf | grep "Entry point address" | awk '{print $4}')
-          echo "Entry point address: $ENTRY_ADDR"
-          
-          # 如果没有入口地址，使用默认值（CH582 的 flash 起始地址）
-          if [ -z "$ENTRY_ADDR" ] || [ "$ENTRY_ADDR" = "0x0" ]; then
-            ENTRY_ADDR="0x13000"
-            echo "Using default address: $ENTRY_ADDR"
-          fi
-          
-          # 生成 hex 文件
-          $TOOLCHAIN_BIN/riscv-none-elf-objcopy -Oihex build/mk01.elf mk01.hex
-          
-          # 生成 uf2 文件
-          python3 utils/uf2conv.py mk01.hex -c -f 0x1aa143c7 -o mk01.uf2 -a $ENTRY_ADDR
-          
-          echo "Generated files:"
-          ls -la mk01.hex mk01.uf2
+      - name: Check artifacts
+        run: |
+          echo "Looking for generated files..."
+          find . -name "*.uf2" -type f
+          find . -name "*.hex" -type f
+          ls -la *.uf2 *.hex 2>/dev/null || echo "No files in root"
+          ls -la build/*.uf2 build/*.hex 2>/dev/null || echo "No files in build"
 
       - name: Get git version
         run: echo "git_ver=$(git describe --always --dirty)" >> $GITHUB_ENV
