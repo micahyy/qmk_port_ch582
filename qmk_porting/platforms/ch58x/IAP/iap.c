@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "iap.h"
 
+#ifndef USB_BUSID
+#define USB_BUSID 0
+#endif
+
 static struct usbd_interface intf0;
 static volatile uint16_t usb_counter = 0;
 static const uint8_t msc_ram_descriptor[] = {
@@ -233,13 +237,13 @@ __HIGH_CODE void usb_dc_low_level_init()
     PFIC_EnableIRQ(USB_IRQn);
 }
 
-__HIGH_CODE void usbd_msc_get_cap(uint8_t lun, uint32_t *block_num, uint16_t *block_size)
+__HIGH_CODE void usbd_msc_get_cap(uint8_t busid, uint8_t lun, uint32_t *block_num, uint32_t *block_size)
 {
     *block_num = MAX_BLOCKS; // bluffing
     *block_size = 512;
 }
 
-__HIGH_CODE int usbd_msc_sector_read(uint32_t sector, uint8_t *buffer, uint32_t length)
+__HIGH_CODE int usbd_msc_sector_read(uint8_t busid, uint8_t lun, uint32_t sector, uint8_t *buffer, uint32_t length)
 {
     uint32_t count = 0;
 
@@ -252,7 +256,7 @@ __HIGH_CODE int usbd_msc_sector_read(uint32_t sector, uint8_t *buffer, uint32_t 
     return 0;
 }
 
-__HIGH_CODE int usbd_msc_sector_write(uint32_t sector, uint8_t *buffer, uint32_t length)
+__HIGH_CODE int usbd_msc_sector_write(uint8_t busid, uint8_t lun, uint32_t sector, uint8_t *buffer, uint32_t length)
 {
     uint32_t count = 0;
 
@@ -572,13 +576,13 @@ int main()
 
     uf2_init();
 
-    usbd_desc_register(msc_ram_descriptor);
-    usbd_add_interface(usbd_msc_init_intf(&intf0, MSC_OUT_EP, MSC_IN_EP));
+    usbd_desc_register(USB_BUSID, msc_ram_descriptor);
+    usbd_add_interface(USB_BUSID, usbd_msc_init_intf(USB_BUSID, &intf0, MSC_OUT_EP, MSC_IN_EP));
 
     gpio_set_pin_input(B10);
     gpio_set_pin_input(B11);
 
-    usbd_initialize();
+    usbd_initialize(USB_BUSID, 0x40000000, NULL);
 
     Main_Circulation();
 }
