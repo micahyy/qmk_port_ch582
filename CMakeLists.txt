@@ -181,8 +181,8 @@ file(GLOB IAP_SOURCES
 add_library(mbedtls INTERFACE)
 target_include_directories(mbedtls INTERFACE
     "${CMAKE_CURRENT_LIST_DIR}/mcuboot_porting"
-    "${CMAKE_CURRENT_LIST_DIR}/mcuboot/ext/mbedtls/include"
-    "${CMAKE_CURRENT_LIST_DIR}/mcuboot/ext/mbedtls/library"
+    "${CMAKE_CURRENT_LIST_DIR}/mcuboot/ext/mbedtls-asn1/include"
+    "${CMAKE_CURRENT_LIST_DIR}/mcuboot/ext/mbedtls-asn1/library"
 )
 file(GLOB mbedtls_sources
     "${CMAKE_CURRENT_LIST_DIR}/mcuboot/ext/mbedtls/library/[^x][^5]*.c"
