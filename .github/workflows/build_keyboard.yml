@@ -132,28 +132,17 @@ jobs:
         run: cmake --no-warn-unused-cli -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=${{env.BUILD_TYPE}} -Dkeyboard:STRING=${{inputs.keyboard}} -Dkeymap:STRING=${{inputs.keymap}} -S${{github.workspace}} -B${{github.workspace}}/build
 
       - name: Build
-        # Build your program with the given configuration
         run: |
-          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target all -- || true
-      - name: Check generated files
-        run: |
-          echo "=== Checking for generated files ==="
-          ls -la build/*.elf 2>/dev/null || echo "No .elf files"
-          ls -la *.hex 2>/dev/null || echo "No .hex files"
-          ls -la *.uf2 2>/dev/null || echo "No .uf2 files"
-          echo "=== Build directory contents ==="
-          ls -la build/
+          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target mk01.elf || true
 
-      - name: Check generated files
+      - name: Post build - generate UF2 and HEX
         run: |
-          echo "=== Build directory ==="
-          ls -la build/
-          echo "=== Looking for .hex files ==="
-          find . -name "*.hex" -type f
-          echo "=== Looking for .uf2 files ==="
-          find . -name "*.uf2" -type f
-          echo "=== Looking for .elf files ==="
-          find . -name "*.elf" -type f
+          # 手动执行打包命令
+          cd build
+          riscv-none-elf-objcopy -Oihex mk01.elf mk01.hex
+          python3 ../utils/uf2conv.py mk01.hex -c -f 0x1aa143c7 -o mk01.uf2
+          cd ..
+          ls -la mk01.hex mk01.uf2
 
       - name: Get git version
         run: echo "git_ver=$(git describe --always --dirty)" >> $GITHUB_ENV
