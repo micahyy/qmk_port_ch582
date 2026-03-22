@@ -4,9 +4,12 @@ run-name: Build keyboard firmware
 on:
   push:
     branches: ["via"]
+    paths:
+      - 'qmk_porting/keyboards/**'
   pull_request:
     branches: ["via"]
-  # Allows you to run this workflow manually from the Actions tab or through HTTP API
+    paths:
+      - 'qmk_porting/keyboards/**'
   workflow_dispatch:
     inputs:
       keyboard:
@@ -18,7 +21,6 @@ on:
         default: "default"
         required: true
         type: string
-
 env:
   BUILD_TYPE: Release
 
