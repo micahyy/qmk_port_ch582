@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "usb_util.h"
 #include "usbd_core.h"
+#ifndef USB_BUSID
+#define USB_BUSID 0
+#endif
 
 bool usb_connected_state()
 {
-    return usb_device_is_configured();
+   return usb_device_is_configured(USB_BUSID);
 }
