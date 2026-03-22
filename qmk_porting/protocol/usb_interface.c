@@ -179,44 +179,7 @@ void usb_dc_low_level_deinit(void)
     gpio_set_pin_input_low(B11);
 }
 
-int usb_dc_deinit(uint8_t busid)
-{
-    usb_dc_low_level_deinit();
-    keyboard_protocol = 1;
-    keyboard_idle = 0;
-    keyboard_leds_set(0);
-    if (hid_descriptor != NULL) {
-        free(hid_descriptor);
-        hid_descriptor = NULL;
-    }
 
-    memset(&keyboard_interface, 0x00, sizeof(keyboard_interface));
-#ifdef RGB_RAW_ENABLE
-    memset(&rgbraw_interface, 0x00, sizeof(rgbraw_interface));
-#endif
-    memset(&extrakey_interface, 0x00, sizeof(extrakey_interface));
-#ifdef RAW_ENABLE
-    memset(&qmkraw_interface, 0x00, sizeof(qmkraw_interface));
-#endif
-    keyboard_state = HID_STATE_IDLE;
-#ifdef RGB_RAW_ENABLE
-    rgbraw_state = HID_STATE_IDLE;
-#endif
-    extrakey_state = HID_STATE_IDLE;
-#ifdef RAW_ENABLE
-    qmkraw_state = HID_STATE_IDLE;
-#endif
-
-    memset(kbd_out_buffer, 0x00, sizeof(kbd_out_buffer));
-#ifdef RGB_RAW_ENABLE
-    memset(rgbraw_out_buffer, 0x00, sizeof(rgbraw_out_buffer));
-#endif
-#ifdef RAW_ENABLE
-    memset(qmkraw_out_buffer, 0x00, sizeof(qmkraw_out_buffer));
-#endif
-
-    return 0;
-}
 
 void init_usb_driver(void)
 {
