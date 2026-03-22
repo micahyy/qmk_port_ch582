@@ -39,7 +39,19 @@ jobs:
         run: git fetch
 
       - name: Prepare Submodules
-        run: git -c submodule."qmk_porting/keyboards_private".update=none submodule update --recursive --init
+        run: |
+          git submodule update --init --recursive || true
+          echo "Submodules prepared (ignoring errors)"
+          
+      - name: Ensure mbedtls
+        run: |
+          if [ ! -f "mcuboot/ext/mbedtls/include/mbedtls/sha256.h" ]; then
+            echo "mbedtls missing, cloning..."
+            cd mcuboot/ext
+            git clone --depth 1 --branch v2.28.8 https://github.com/Mbed-TLS/mbedtls.git
+            cd ../..
+          fi
+          ls -la mcuboot/ext/mbedtls/include/mbedtls/sha256.h
 
       - name: Create missing wireless directories
         run: |
