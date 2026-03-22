@@ -42,7 +42,34 @@ jobs:
         run: |
           git submodule update --init --recursive || true
           echo "Submodules prepared (ignoring errors)"
-          
+      
+      - name: Create missing rgb_matrix/post_config.h
+        run: |
+          mkdir -p qmk_firmware/quantum/rgb_matrix
+          cat > qmk_firmware/quantum/rgb_matrix/post_config.h << 'EOF'
+          // Copyright 2023 QMK
+          // SPDX-License-Identifier: GPL-2.0-or-later
+
+          #pragma once
+
+          #ifndef RGB_MATRIX_LED_COUNT
+              #ifdef RGBLED_NUM
+                  #define RGB_MATRIX_LED_COUNT RGBLED_NUM
+              #else
+                  #define RGB_MATRIX_LED_COUNT 1
+              #endif
+          #endif
+
+          #ifndef RGB_MATRIX_DRIVER
+              #define RGB_MATRIX_DRIVER WS2812
+          #endif
+
+          #ifndef RGB_MATRIX_DEFAULT_MODE
+              #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_CYCLE_LEFT_RIGHT
+          #endif
+          EOF
+          echo "post_config.h created successfully"
+
       - name: Ensure mbedtls
         run: |
           if [ ! -f "mcuboot/ext/mbedtls/include/mbedtls/sha256.h" ]; then
