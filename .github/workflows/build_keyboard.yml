@@ -59,12 +59,17 @@ jobs:
           fi
       - name: Clone mbedtls for IAP
         run: |
+          echo "Current directory: $(pwd)"
+          echo "Creating mbedtls directory..."
+          mkdir -p mcuboot/ext
           cd mcuboot/ext
-          if [ ! -d "mbedtls" ]; then
-            git clone --depth 1 --branch v2.28.8 https://github.com/Mbed-TLS/mbedtls.git
-          fi
+          echo "Cloning mbedtls..."
+          git clone --depth 1 --branch v2.28.8 https://github.com/Mbed-TLS/mbedtls.git
+          echo "Checking if clone succeeded..."
+          ls -la mbedtls/
+          echo "Checking sha256.h..."
+          ls -la mbedtls/include/mbedtls/sha256.h || echo "sha256.h not found"
           cd ../..
-          ls -la mcuboot/ext/mbedtls/include/mbedtls/sha256.h
 
       - name: Create missing rgb_matrix/post_config.h
         run: |
