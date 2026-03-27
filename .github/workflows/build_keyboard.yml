@@ -21,6 +21,7 @@ on:
         default: "default"
         required: true
         type: string
+
 env:
   BUILD_TYPE: Release
 
@@ -136,6 +137,7 @@ jobs:
           #endif
           EOF
           echo "post_config.h created"
+
       - name: Create startup file
         run: |
           mkdir -p qmk_porting/platforms/ch58x
@@ -152,14 +154,53 @@ jobs:
           EOF
           echo "startup.c created"
 
-      - name: Check linker script
+      - name: Create linker script
         run: |
-          echo "=== Looking for .ld files ==="
-          find . -name "*.ld" -type f
-          echo "=== CMakeLists.txt link options ==="
-          grep -n "target_link_options" CMakeLists.txt || echo "Not found"
+          mkdir -p qmk_porting/platforms/ch58x
+          cat > qmk_porting/platforms/ch58x/ch58x_flash.ld << 'EOF'
+          OUTPUT_ARCH(riscv)
+          ENTRY(_start)
+          
+          MEMORY
+          {
+              FLASH (rx)  : ORIGIN = 0x00013000, LENGTH = 372K
+              RAM   (xrw) : ORIGIN = 0x20000000, LENGTH = 32K
+          }
+          
+          SECTIONS
+          {
+              .text : {
+                  *(.text)
+                  *(.text.*)
+              } > FLASH
+              
+              .rodata : {
+                  *(.rodata)
+                  *(.rodata.*)
+              } > FLASH
+              
+              .data : {
+                  *(.data)
+                  *(.data.*)
+              } > RAM AT> FLASH
+              
+              .bss : {
+                  *(.bss)
+                  *(.bss.*)
+              } > RAM
+          }
+          EOF
+          echo "linker script created"
+
       - name: Configure CMake
-        run: cmake --no-warn-unused-cli -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=${{env.BUILD_TYPE}} -Dkeyboard:STRING=${{inputs.keyboard}} -Dkeymap:STRING=${{inputs.keymap}} -S${{github.workspace}} -B${{github.workspace}}/build
+        run: |
+          cmake --no-warn-unused-cli \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE \
+            -DCMAKE_BUILD_TYPE:STRING=${{env.BUILD_TYPE}} \
+            -Dkeyboard:STRING=${{inputs.keyboard}} \
+            -Dkeymap:STRING=${{inputs.keymap}} \
+            -DCMAKE_EXE_LINKER_FLAGS="-T ${{github.workspace}}/qmk_porting/platforms/ch58x/ch58x_flash.ld" \
+            -S${{github.workspace}} -B${{github.workspace}}/build
 
       - name: Build
         run: |
@@ -168,12 +209,13 @@ jobs:
       - name: Build with post_build
         run: |
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target all -- || true
+
       - name: Upload ELF firmware
         uses: actions/upload-artifact@v4
         with:
           name: ${{inputs.keyboard}}.elf
           path: build/mk01.elf
-          
+
       - name: Check artifacts
         run: |
           echo "Looking for generated files..."
