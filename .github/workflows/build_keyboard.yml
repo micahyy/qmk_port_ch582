@@ -38,7 +38,6 @@ jobs:
 
       - name: Prepare Submodules
         run: |
-          # 初始化所有子模块，忽略 keyboards_private 的错误
           git submodule update --init --recursive || true
           
           # 确保 qmk_firmware 子模块被正确拉取
@@ -137,7 +136,28 @@ jobs:
           #endif
           EOF
           echo "post_config.h created"
+      - name: Create startup file
+        run: |
+          mkdir -p qmk_porting/platforms/ch58x
+          cat > qmk_porting/platforms/ch58x/startup.c << 'EOF'
+          // Simple startup file for CH582
+          void _start(void) __attribute__((noreturn));
+          
+          extern int main(void);
+          
+          void _start(void) {
+              main();
+              while(1);
+          }
+          EOF
+          echo "startup.c created"
 
+      - name: Check linker script
+        run: |
+          echo "=== Looking for .ld files ==="
+          find . -name "*.ld" -type f
+          echo "=== CMakeLists.txt link options ==="
+          grep -n "target_link_options" CMakeLists.txt || echo "Not found"
       - name: Configure CMake
         run: cmake --no-warn-unused-cli -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DCMAKE_BUILD_TYPE:STRING=${{env.BUILD_TYPE}} -Dkeyboard:STRING=${{inputs.keyboard}} -Dkeymap:STRING=${{inputs.keymap}} -S${{github.workspace}} -B${{github.workspace}}/build
 
