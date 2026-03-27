@@ -107,17 +107,13 @@ jobs:
           #endif
           EOF
 
-      - name: Create startup file
+      - name: Add official startup file to build
         run: |
-          mkdir -p qmk_porting/platforms/ch58x
-          cat > qmk_porting/platforms/ch58x/startup.c << 'EOF'
-          void _start(void) __attribute__((noreturn));
-          extern int main(void);
-          void _start(void) {
-              main();
-              while(1);
-          }
-          EOF
+          # 复制官方启动文件到 platform 目录
+          cp sdk/Startup/startup_CH583.S qmk_porting/platforms/ch58x/startup_CH583.S
+          # 添加到 CMake 源文件列表
+          echo "target_sources(mk01.elf PRIVATE qmk_porting/platforms/ch58x/startup_CH583.S)" >> CMakeLists.txt
+          echo "Official startup file added"
 
       - name: Configure CMake
         run: |
