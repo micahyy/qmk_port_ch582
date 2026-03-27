@@ -119,20 +119,6 @@ jobs:
           #include <stdint.h>
           #include <stdbool.h>
           
-          // ========== 延时函数 ==========
-          void mDelayuS(uint32_t us) {
-              volatile uint32_t i;
-              for (i = 0; i < us * 10; i++) {
-                  __asm__ volatile ("nop");
-              }
-          }
-          
-          void mDelaymS(uint32_t ms) {
-              for (uint32_t i = 0; i < ms; i++) {
-                  mDelayuS(1000);
-              }
-          }
-          
           // ========== EEPROM/NVM 函数 ==========
           bool nvm_eeconfig_is_enabled(void) { return true; }
           uint32_t nvm_eeconfig_read_debug(void) { return 0; }
@@ -160,9 +146,7 @@ jobs:
           void wakeup_matrix_handle_key_event(uint8_t row, uint8_t col, bool pressed) { (void)row; (void)col; (void)pressed; }
           bool keypress_is_wakeup_key(uint8_t row, uint8_t col) { (void)row; (void)col; return false; }
           EOF
-          echo "target_sources(mk01.elf PRIVATE qmk_porting/platforms/ch58x/missing_functions.c)" >> CMakeLists.txt
-          echo "Missing functions added"
-
+          echo "Missing functions added (removed duplicate delay functions)"
       - name: Configure CMake
         run: |
           cmake --no-warn-unused-cli \
