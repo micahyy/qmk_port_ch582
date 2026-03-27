@@ -41,19 +41,15 @@ jobs:
         run: |
           git submodule update --init --recursive || true
           
-          # 确保 qmk_firmware 子模块被正确拉取
           if [ ! -d "qmk_firmware/quantum" ]; then
             echo "qmk_firmware submodule not initialized, forcing..."
             git submodule update --init --recursive qmk_firmware
           fi
           
-          # 验证 quantum.h 是否存在
           if [ -f "qmk_firmware/quantum/quantum.h" ]; then
             echo "✓ quantum.h found"
           else
-            echo "✗ quantum.h not found, checking directory..."
-            ls -la qmk_firmware/ || echo "qmk_firmware directory empty"
-            ls -la qmk_firmware/quantum/ 2>/dev/null || echo "quantum directory not found"
+            echo "✗ quantum.h not found"
           fi
 
       - name: Create minimal mbedtls headers for IAP
@@ -62,44 +58,27 @@ jobs:
           cat > mcuboot/ext/mbedtls/include/mbedtls/sha256.h << 'EOF'
           #ifndef MBEDTLS_SHA256_H
           #define MBEDTLS_SHA256_H
-
           #include <stdint.h>
           #include <stddef.h>
-
           #ifdef __cplusplus
           extern "C" {
           #endif
-
           typedef struct {
               uint32_t total[2];
               uint32_t state[8];
               unsigned char buffer[64];
           } mbedtls_sha256_context;
-
           void mbedtls_sha256_init(mbedtls_sha256_context *ctx);
           void mbedtls_sha256_free(mbedtls_sha256_context *ctx);
           void mbedtls_sha256_starts(mbedtls_sha256_context *ctx, int is224);
           void mbedtls_sha256_update(mbedtls_sha256_context *ctx, const unsigned char *input, size_t ilen);
           void mbedtls_sha256_finish(mbedtls_sha256_context *ctx, unsigned char output[32]);
           void mbedtls_sha256(const unsigned char *input, size_t ilen, unsigned char output[32], int is224);
-
           #ifdef __cplusplus
           }
           #endif
-
           #endif
           EOF
-          echo "mbedtls/sha256.h created"
-
-      - name: Ensure mbedtls
-        run: |
-          if [ ! -f "mcuboot/ext/mbedtls/include/mbedtls/sha256.h" ]; then
-            echo "mbedtls missing, cloning..."
-            cd mcuboot/ext
-            git clone --depth 1 --branch v2.28.8 https://github.com/Mbed-TLS/mbedtls.git
-            cd ../..
-          fi
-          ls -la mcuboot/ext/mbedtls/include/mbedtls/sha256.h
 
       - name: Create missing wireless directories
         run: |
@@ -115,11 +94,7 @@ jobs:
         run: |
           mkdir -p qmk_firmware/quantum/rgb_matrix
           cat > qmk_firmware/quantum/rgb_matrix/post_config.h << 'EOF'
-          // Copyright 2023 QMK
-          // SPDX-License-Identifier: GPL-2.0-or-later
-
           #pragma once
-
           #ifndef RGB_MATRIX_LED_COUNT
               #ifdef RGBLED_NUM
                   #define RGB_MATRIX_LED_COUNT RGBLED_NUM
@@ -127,70 +102,22 @@ jobs:
                   #define RGB_MATRIX_LED_COUNT 1
               #endif
           #endif
-
           #ifndef RGB_MATRIX_DRIVER
               #define RGB_MATRIX_DRIVER WS2812
           #endif
-
-          #ifndef RGB_MATRIX_DEFAULT_MODE
-              #define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_CYCLE_LEFT_RIGHT
-          #endif
           EOF
-          echo "post_config.h created"
 
       - name: Create startup file
         run: |
           mkdir -p qmk_porting/platforms/ch58x
           cat > qmk_porting/platforms/ch58x/startup.c << 'EOF'
-          // Simple startup file for CH582
           void _start(void) __attribute__((noreturn));
-          
           extern int main(void);
-          
           void _start(void) {
               main();
               while(1);
           }
           EOF
-          echo "startup.c created"
-
-      - name: Create linker script
-        run: |
-          mkdir -p qmk_porting/platforms/ch58x
-          cat > qmk_porting/platforms/ch58x/ch58x_flash.ld << 'EOF'
-          OUTPUT_ARCH(riscv)
-          ENTRY(_start)
-          
-          MEMORY
-          {
-              FLASH (rx)  : ORIGIN = 0x00013000, LENGTH = 372K
-              RAM   (xrw) : ORIGIN = 0x20000000, LENGTH = 32K
-          }
-          
-          SECTIONS
-          {
-              .text : {
-                  *(.text)
-                  *(.text.*)
-              } > FLASH
-              
-              .rodata : {
-                  *(.rodata)
-                  *(.rodata.*)
-              } > FLASH
-              
-              .data : {
-                  *(.data)
-                  *(.data.*)
-              } > RAM AT> FLASH
-              
-              .bss : {
-                  *(.bss)
-                  *(.bss.*)
-              } > RAM
-          }
-          EOF
-          echo "linker script created"
 
       - name: Configure CMake
         run: |
@@ -199,16 +126,11 @@ jobs:
             -DCMAKE_BUILD_TYPE:STRING=${{env.BUILD_TYPE}} \
             -Dkeyboard:STRING=${{inputs.keyboard}} \
             -Dkeymap:STRING=${{inputs.keymap}} \
-            -DCMAKE_EXE_LINKER_FLAGS="-T ${{github.workspace}}/qmk_porting/platforms/ch58x/ch58x_flash.ld" \
             -S${{github.workspace}} -B${{github.workspace}}/build
 
       - name: Build
         run: |
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target mk01.elf || true
-
-      - name: Build with post_build
-        run: |
-          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target all -- || true
 
       - name: Upload ELF firmware
         uses: actions/upload-artifact@v4
@@ -216,25 +138,5 @@ jobs:
           name: ${{inputs.keyboard}}.elf
           path: build/mk01.elf
 
-      - name: Check artifacts
-        run: |
-          echo "Looking for generated files..."
-          find . -name "*.uf2" -type f
-          find . -name "*.hex" -type f
-          ls -la *.uf2 *.hex 2>/dev/null || echo "No files in root"
-          ls -la build/*.uf2 build/*.hex 2>/dev/null || echo "No files in build"
-
       - name: Get git version
         run: echo "git_ver=$(git describe --always --dirty)" >> $GITHUB_ENV
-
-      - name: UF2 Firmware (${{inputs.keyboard}})
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{inputs.keyboard}}.uf2
-          path: mk01.uf2
-
-      - name: Hex Firmware (${{inputs.keyboard}})
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{inputs.keyboard}}.hex
-          path: mk01.hex
