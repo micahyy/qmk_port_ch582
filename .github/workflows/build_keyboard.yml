@@ -148,6 +148,11 @@ jobs:
       - name: Build with post_build
         run: |
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --target all -- || true
+      - name: Upload ELF firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{inputs.keyboard}}.elf
+          path: build/mk01.elf
           
       - name: Check artifacts
         run: |
