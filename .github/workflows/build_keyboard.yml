@@ -147,6 +147,14 @@ jobs:
           bool keypress_is_wakeup_key(uint8_t row, uint8_t col) { (void)row; (void)col; return false; }
           EOF
           echo "Missing functions added (removed duplicate delay functions)"
+      - name: Force add wireless.c to build
+        run: |
+          # 确保 wireless.c 被编译
+          echo "target_sources(mk01.elf PRIVATE qmk_porting/keyboards/mk01/wireless/wireless.c)" >> CMakeLists.txt
+          echo "wireless.c added"
+          
+          # 显示 CMakeLists.txt 最后几行确认
+          tail -5 CMakeLists.txt
       - name: Configure CMake
         run: |
           cmake --no-warn-unused-cli \
