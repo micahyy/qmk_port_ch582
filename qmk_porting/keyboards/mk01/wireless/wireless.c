@@ -1,5 +1,3 @@
-# 删除旧文件（如果存在）
-Remove-Item "E:\github\qmk_port_ch582\qmk_porting\keyboards\mk01\wireless\wireless.c" -Force -ErrorAction SilentlyContinue
 
 # 创建 wireless.c 文件（包含所有必要函数）
 @'
