@@ -39,6 +39,12 @@ void nvm_eeconfig_update_keymap(uint32_t data) { (void)data; }
 uint32_t nvm_eeconfig_read_rgb_matrix(void) { return 0; }
 void nvm_eeconfig_update_rgb_matrix(uint32_t data) { (void)data; }
 void nvm_eeconfig_update_handedness(bool handedness) { (void)handedness; }
+void nvm_eeconfig_update_kb(void) {}
+void nvm_eeconfig_erase(void) {}
+void nvm_eeconfig_enable(void) {}
+void nvm_eeconfig_update_debug(uint32_t data) { (void)data; }
+void nvm_eeconfig_update_default_layer(uint32_t data) { (void)data; }
+void nvm_eeconfig_disable(void) {}
 
 // ========== VIA functions ==========
 bool nvm_via_read_magic(void) { return true; }
