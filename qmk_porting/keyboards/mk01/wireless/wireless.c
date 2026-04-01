@@ -45,6 +45,29 @@ void nvm_eeconfig_enable(void) {}
 void nvm_eeconfig_update_debug(uint32_t data) { (void)data; }
 void nvm_eeconfig_update_default_layer(uint32_t data) { (void)data; }
 void nvm_eeconfig_disable(void) {}
+void nvm_eeconfig_update_user(void) {}
+
+// ========== Dynamic Keymap functions ==========
+bool nvm_dynamic_keymap_read_keycode(uint16_t keymap_id, uint16_t layer, uint16_t row, uint16_t column, uint16_t* keycode) { 
+    (void)keymap_id; (void)layer; (void)row; (void)column;
+    if (keycode) *keycode = 0;
+    return true;
+}
+bool nvm_dynamic_keymap_update_buffer(uint16_t keymap_id, uint16_t offset, uint8_t* data, uint16_t size) { 
+    (void)keymap_id; (void)offset; (void)data; (void)size;
+    return true;
+}
+uint16_t nvm_dynamic_keymap_macro_size(void) { return 0; }
+bool nvm_dynamic_keymap_macro_read_buffer(uint16_t offset, uint8_t* buffer, uint16_t size) { 
+    (void)offset; (void)buffer; (void)size;
+    return true;
+}
+bool nvm_dynamic_keymap_macro_update_buffer(uint16_t offset, uint8_t* data, uint16_t size) { 
+    (void)offset; (void)data; (void)size;
+    return true;
+}
+void nvm_dynamic_keymap_macro_erase(void) {}
+void nvm_dynamic_keymap_macro_reset(void) {}
 
 // ========== VIA functions ==========
 bool nvm_via_read_magic(void) { return true; }
