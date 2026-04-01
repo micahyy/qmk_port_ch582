@@ -26,3 +26,8 @@ void process_ble_passcode(void) {}
 // Bluetooth protocol interface
 extern const void *ch582_protocol_ble;
 const void *ch582_protocol_ble = NULL;
+
+// HAL initialization
+void HAL_Init(void) {
+    // Hardware abstraction layer initialization
+}
