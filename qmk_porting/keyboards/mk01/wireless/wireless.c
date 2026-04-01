@@ -30,6 +30,11 @@ const void *ch582_protocol_ble = NULL;
 // ========== HAL initialization ==========
 void HAL_Init(void) {}
 
+// ========== UART functions ==========
+void UART1_Reset(void) {}
+void UART1_DefInit(void) {}
+void UART1_BaudRateCfg(uint32_t baud) { (void)baud; }
+
 // ========== EEPROM/NVM functions ==========
 bool nvm_eeconfig_is_enabled(void) { return true; }
 uint32_t nvm_eeconfig_read_debug(void) { return 0; }
@@ -53,10 +58,19 @@ bool nvm_dynamic_keymap_read_keycode(uint16_t keymap_id, uint16_t layer, uint16_
     if (keycode) *keycode = 0;
     return true;
 }
+bool nvm_dynamic_keymap_update_keycode(uint16_t keymap_id, uint16_t layer, uint16_t row, uint16_t column, uint16_t keycode) { 
+    (void)keymap_id; (void)layer; (void)row; (void)column; (void)keycode;
+    return true;
+}
 bool nvm_dynamic_keymap_update_buffer(uint16_t keymap_id, uint16_t offset, uint8_t* data, uint16_t size) { 
     (void)keymap_id; (void)offset; (void)data; (void)size;
     return true;
 }
+bool nvm_dynamic_keymap_read_buffer(uint16_t keymap_id, uint16_t offset, uint8_t* data, uint16_t size) {
+    (void)keymap_id; (void)offset; (void)data; (void)size;
+    return true;
+}
+void nvm_dynamic_keymap_erase(void) {}
 uint16_t nvm_dynamic_keymap_macro_size(void) { return 0; }
 bool nvm_dynamic_keymap_macro_read_buffer(uint16_t offset, uint8_t* buffer, uint16_t size) { 
     (void)offset; (void)buffer; (void)size;
@@ -89,5 +103,3 @@ bool keypress_is_wakeup_key(uint8_t row, uint8_t col) { (void)row; (void)col; re
 // ========== System functions ==========
 void SYS_ResetExecute(void) { while(1); }
 void CH58X_BLEInit(void) {}
-void UART1_DefInit(void) {}
-void UART1_BaudRateCfg(uint32_t baud) { (void)baud; }
