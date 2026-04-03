@@ -81,6 +81,5 @@ bool keypress_is_wakeup_key(uint8_t row, uint8_t col) { (void)row; (void)col; re
 // ========== System functions ==========
 void SYS_ResetExecute(void) { while(1); }
 void HAL_SleepInit(void) {}
-void UART1_Reset(void) {}
-void UART1_DefInit(void) {}
-void UART1_BaudRateCfg(uint32_t baud) { (void)baud; }
+void CH58X_LowPower(void) {}
+uint32_t MEM_BUF[256] = {0};
