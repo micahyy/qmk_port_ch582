@@ -155,6 +155,23 @@ jobs:
           
           # 显示 CMakeLists.txt 最后几行确认
           tail -5 CMakeLists.txt
+
+
+      - name: Clean build directory
+        run: |
+          rm -rf build
+          echo "Build directory cleaned"
+
+      - name: Configure CMake
+        run: |
+          cmake --no-warn-unused-cli \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE \
+            -DCMAKE_BUILD_TYPE:STRING=${{env.BUILD_TYPE}} \
+            -Dkeyboard:STRING=${{inputs.keyboard}} \
+            -Dkeymap:STRING=${{inputs.keymap}} \
+            -DBUILD_WIRELESS_LIB=ON \
+            -S${{github.workspace}} -B${{github.workspace}}/build
+            
       - name: Configure CMake
         run: |
           cmake --no-warn-unused-cli \
