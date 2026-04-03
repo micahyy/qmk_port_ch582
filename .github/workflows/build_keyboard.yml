@@ -113,13 +113,25 @@ jobs:
           echo "target_sources(mk01.elf PRIVATE qmk_porting/platforms/ch58x/startup_CH583.S)" >> CMakeLists.txt
           echo "Official startup file added"
 
-      - name: Create missing function implementations
+      - name: Create wireless.c
         run: |
-          cat > qmk_porting/platforms/ch58x/missing_functions.c << 'EOF'
+          cat > qmk_porting/keyboards/mk01/wireless/wireless.c << 'EOF'
           #include <stdint.h>
           #include <stdbool.h>
-          
-          // ========== EEPROM/NVM 函数 ==========
+
+          // Wireless indicator functions
+          void wireless_indicator_daemon(void) {}
+          void wireless_rgb_indicator_task(void) {}
+          void wireless_indicator_status_reset(void) {}
+          void wireless_pre_process_record_kb(void) {}
+          bool wireless_process_record(void) { return false; }
+          void process_ble_passcode(void) {}
+
+          // Bluetooth protocol interface
+          extern const void *ch582_protocol_ble;
+          const void *ch582_protocol_ble = NULL;
+
+          // EEPROM/NVM functions
           bool nvm_eeconfig_is_enabled(void) { return true; }
           uint32_t nvm_eeconfig_read_debug(void) { return 0; }
           uint32_t nvm_eeconfig_read_default_layer(void) { return 0; }
@@ -128,49 +140,78 @@ jobs:
           uint32_t nvm_eeconfig_read_rgb_matrix(void) { return 0; }
           void nvm_eeconfig_update_rgb_matrix(uint32_t data) { (void)data; }
           void nvm_eeconfig_update_handedness(bool handedness) { (void)handedness; }
-          
-          // ========== VIA 函数 ==========
+          void nvm_eeconfig_update_kb(void) {}
+          void nvm_eeconfig_erase(void) {}
+          void nvm_eeconfig_enable(void) {}
+          void nvm_eeconfig_update_debug(uint32_t data) { (void)data; }
+          void nvm_eeconfig_update_default_layer(uint32_t data) { (void)data; }
+          void nvm_eeconfig_disable(void) {}
+          void nvm_eeconfig_update_user(void) {}
+
+          // Dynamic Keymap functions
+          bool nvm_dynamic_keymap_read_keycode(uint16_t keymap_id, uint16_t layer, uint16_t row, uint16_t column, uint16_t* keycode) { 
+              (void)keymap_id; (void)layer; (void)row; (void)column;
+              if (keycode) *keycode = 0;
+              return true;
+          }
+          bool nvm_dynamic_keymap_update_keycode(uint16_t keymap_id, uint16_t layer, uint16_t row, uint16_t column, uint16_t keycode) { 
+              (void)keymap_id; (void)layer; (void)row; (void)column; (void)keycode;
+              return true;
+          }
+          bool nvm_dynamic_keymap_update_buffer(uint16_t keymap_id, uint16_t offset, uint8_t* data, uint16_t size) { 
+              (void)keymap_id; (void)offset; (void)data; (void)size;
+              return true;
+          }
+          bool nvm_dynamic_keymap_read_buffer(uint16_t keymap_id, uint16_t offset, uint8_t* data, uint16_t size) {
+              (void)keymap_id; (void)offset; (void)data; (void)size;
+              return true;
+          }
+          void nvm_dynamic_keymap_erase(void) {}
+          uint16_t nvm_dynamic_keymap_macro_size(void) { return 0; }
+          bool nvm_dynamic_keymap_macro_read_buffer(uint16_t offset, uint8_t* buffer, uint16_t size) { 
+              (void)offset; (void)buffer; (void)size;
+              return true;
+          }
+          bool nvm_dynamic_keymap_macro_update_buffer(uint16_t offset, uint8_t* data, uint16_t size) { 
+              (void)offset; (void)data; (void)size;
+              return true;
+          }
+          void nvm_dynamic_keymap_macro_erase(void) {}
+          void nvm_dynamic_keymap_macro_reset(void) {}
+
+          // VIA functions
           bool nvm_via_read_magic(void) { return true; }
           void nvm_via_erase(void) {}
           void nvm_via_update_magic(void) {}
           void nvm_via_update_layout_options(void) {}
           void nvm_via_read_layout_options(void) {}
-          
-          // ========== QMK 处理函数 ==========
+
+          // QMK processing functions
           void process_underglow(void) {}
           void process_default_layer(void) {}
           void process_oneshot(void) {}
           void process_quantum(void) {}
-          
-          // ========== 唤醒相关函数 ==========
+
+          // Wakeup functions
           void wakeup_matrix_handle_key_event(uint8_t row, uint8_t col, bool pressed) { (void)row; (void)col; (void)pressed; }
           bool keypress_is_wakeup_key(uint8_t row, uint8_t col) { (void)row; (void)col; return false; }
+
+          // System functions
+          void HAL_SleepInit(void) {}
+          void CH58X_LowPower(void) {}
+          uint32_t MEM_BUF[256] = {0};
           EOF
-          echo "Missing functions added (removed duplicate delay functions)"
-      - name: Force add wireless.c to build
+
+      - name: Add wireless.c to build
         run: |
-          # 确保 wireless.c 被编译
           echo "target_sources(mk01.elf PRIVATE qmk_porting/keyboards/mk01/wireless/wireless.c)" >> CMakeLists.txt
           echo "wireless.c added"
-          
-          # 显示 CMakeLists.txt 最后几行确认
-          tail -5 CMakeLists.txt
-
 
       - name: Clean build directory
         run: |
           rm -rf build
           echo "Build directory cleaned"
 
-           - name: Configure CMake
-        run: |
-          cmake --no-warn-unused-cli \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE \
-            -DCMAKE_BUILD_TYPE:STRING=${{env.BUILD_TYPE}} \
-            -Dkeyboard:STRING=${{inputs.keyboard}} \
-            -Dkeymap:STRING=${{inputs.keymap}} \
-            -S${{github.workspace}} -B${{github.workspace}}/build
-            
       - name: Configure CMake
         run: |
           cmake --no-warn-unused-cli \
@@ -191,7 +232,7 @@ jobs:
           # 生成 hex 文件
           $TOOLCHAIN_BIN/riscv-none-elf-objcopy -Oihex build/mk01.elf mk01.hex
           
-          # 生成 uf2 文件（使用 CH582 的 family ID）
+          # 生成 uf2 文件
           python3 utils/uf2conv.py mk01.hex -c -f 0x1aa143c7 -o mk01.uf2
           
           echo "Generated files:"
