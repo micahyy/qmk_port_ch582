@@ -237,13 +237,10 @@ else()
     target_link_libraries(mcuboot_porting INTERFACE CH582_IAP)
 
     add_executable(${keyboard}.elf ${APP_SOURCES} 
-    ${CMAKE_CURRENT_SOURCE_DIR}/qmk_porting/drivers/ws2812/ws2812_qmk_adapter.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/qmk_porting/drivers/ws2812/ws2812_qmk_adapter.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/qmk_porting/keyboards/mk01/wireless/wireless.c
     )
     add_executable(${keyboard}_IAP.elf ${IAP_SOURCES})
-
-    target_sources(${keyboard}.elf PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/qmk_porting/drivers/ws2812/ws2812_qmk_adapter.c
-    )
 
 
     target_compile_definitions(${keyboard}.elf PUBLIC __BUILDING_APP__=1)
