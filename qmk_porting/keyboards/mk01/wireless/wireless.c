@@ -1,25 +1,6 @@
 ﻿#include <stdint.h>
 #include <stdbool.h>
 
-// ========== Delay functions (if not provided by SDK) ==========
-// Note: mDelayuS and mDelaymS are likely in SDK, keep them commented
-// If you get linker errors for these, uncomment them.
-
-/*
-void mDelayuS(uint16_t us) {
-    volatile uint32_t i;
-    for (i = 0; i < us * 10; i++) {
-        __asm__ volatile ("nop");
-    }
-}
-
-void mDelaymS(uint16_t ms) {
-    for (uint16_t i = 0; i < ms; i++) {
-        mDelayuS(1000);
-    }
-}
-*/
-
 // ========== Wireless indicator functions ==========
 void wireless_indicator_daemon(void) {}
 void wireless_rgb_indicator_task(void) {}
@@ -99,7 +80,7 @@ bool keypress_is_wakeup_key(uint8_t row, uint8_t col) { (void)row; (void)col; re
 
 // ========== System functions ==========
 void SYS_ResetExecute(void) { while(1); }
-void CH58X_BLEInit(void) {}
+void HAL_SleepInit(void) {}
 void UART1_Reset(void) {}
 void UART1_DefInit(void) {}
 void UART1_BaudRateCfg(uint32_t baud) { (void)baud; }
