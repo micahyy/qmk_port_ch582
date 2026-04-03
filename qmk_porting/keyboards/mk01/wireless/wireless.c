@@ -79,7 +79,6 @@ void wakeup_matrix_handle_key_event(uint8_t row, uint8_t col, bool pressed) { (v
 bool keypress_is_wakeup_key(uint8_t row, uint8_t col) { (void)row; (void)col; return false; }
 
 // ========== System functions ==========
-void SYS_ResetExecute(void) { while(1); }
 void HAL_SleepInit(void) {}
 void CH58X_LowPower(void) {}
 uint32_t MEM_BUF[256] = {0};
